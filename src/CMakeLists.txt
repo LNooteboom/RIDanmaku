@@ -1,0 +1,19 @@
+target_sources(${OUTPUT_NAME}
+	PRIVATE
+	redefined.c
+	danmaku.c
+	player.c
+	enemy.c
+	bullet.c
+	bulletmgr.c
+	bg.c
+	laser.c
+	items.c
+	boss.c
+	score.c
+	keymap.c
+	menu.c
+	loading.c
+	dialog.c
+	replay.c
+)
