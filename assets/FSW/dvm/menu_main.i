@@ -61,8 +61,8 @@ void mainMenuGameStart(int event) {
 		texture(0, "tex/ui/Buttons.png");
 		srcRect(0, 0, 256, 64);
 	}
-	//mainMenuBtn(event, 100, 280, 0);
-	mainMenuBtn(event, 70, 400, 24);
+	mainMenuBtn(event, 100, 280, 0);
+	//mainMenuBtn(event, 70, 400, 24);
 }
 void mainMenuExtraStart(int event) {
 	if (!event) {

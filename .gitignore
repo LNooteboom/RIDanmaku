@@ -1,0 +1,13 @@
+out/
+build/
+assets/all/
+assets/Rubbish
+assets/FSW/ascii/
+assets/FSW/bgm/
+assets/FSW/mesh/
+assets/FSW/sfx/
+assets/FSW/shaders/
+assets/FSW/tex/
+assets/.*
+.*/
+*.ich

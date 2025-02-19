@@ -134,8 +134,7 @@ static void shotMenuChoose(struct MenuController *m) {
 	//dsp->stage = 2;
 	dsp->power = 0;
 	dsp->difficulty = D_EXTRA;
-	//danmakuSwitch(LOAD_BLACK, NULL);
-	danmakuSwitch(LOAD_BLACK, "bha");
+	danmakuSwitch(LOAD_BLACK, NULL);
 }
 static void shotMenuStart(struct MenuController *m) {
 	m->selected = danmaku->startParams.shotType;
@@ -351,13 +350,10 @@ static void mainMenuStartNoBg(struct MenuController *m) {
 	m->leftRight = false;
 	m->selectMin = 0;
 	m->selectMax = 2;//8;
-	/*for (int i = 0; i < m->nButtons; i++) {
+	for (int i = 0; i < m->nButtons; i++) {
 		m->buttons[i] = newEntity();
 		drawVmNew(m->buttons[i], mainMenuButtons[i]);
-	}*/
-	m->buttons[0] = newEntity(); drawVmNew(m->buttons[0], mainMenuButtons[0]);
-	m->buttons[1] = newEntity(); drawVmNew(m->buttons[1], mainMenuButtons[7]);
-	m->buttons[2] = newEntity(); drawVmNew(m->buttons[2], mainMenuButtons[8]);
+	}
 	drawVmEvent(getComponent(DRAW_VM, m->buttons[0]), EVENT_SELECT);
 }
 static void mainMenuStart(struct MenuController *m) {
