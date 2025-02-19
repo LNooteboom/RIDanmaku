@@ -1,6 +1,7 @@
 #include "redefined.h"
 #include <basics.h>
 #include <audio.h>
+#include <input.h>
 
 #define DAN_MAX_LIVES 8
 #define DAN_LIFE_PIECES 5

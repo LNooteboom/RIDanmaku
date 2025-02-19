@@ -1,4 +1,5 @@
 #include "redefined.h"
+#include <input.h>
 
 bool keyPressed(enum Keys key) {
 	return game->keys.pressed & (1 << key);

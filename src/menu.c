@@ -331,13 +331,12 @@ static void mainMenuChoose(struct MenuController *m) {
 	switch (m->selected) {
 	case 0: /* Game start */
 		//scriptsMenuStart(m);
-		//difficultyMenuStart(m);
-		shotMenuStart(m);
+		difficultyMenuStart(m);
 		break;
-	case 1://7: /* Settings */
+	case 7: /* Settings */
 		settingsMenuStart(m);
 		break;
-	case 2://8: /* Quit */
+	case 8: /* Quit */
 		quit = true;
 		break;
 	}
@@ -349,7 +348,7 @@ static void mainMenuStartNoBg(struct MenuController *m) {
 	m->nButtons = 9;
 	m->leftRight = false;
 	m->selectMin = 0;
-	m->selectMax = 2;//8;
+	m->selectMax = 8;
 	for (int i = 0; i < m->nButtons; i++) {
 		m->buttons[i] = newEntity();
 		drawVmNew(m->buttons[i], mainMenuButtons[i]);
