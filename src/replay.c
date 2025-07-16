@@ -14,7 +14,7 @@ static void pushKeys(struct ReplayController *r, uint32_t keys) {
 	re->keys = keys;
 
 	r->stages[r->currentStage].nEvents = nEvents + 1;
-	logDebug("keys: %.08x\n", keys);
+	//logDebug("keys: %.08x\n", keys);
 }
 
 static const enum Keys replayKeys[8] = {

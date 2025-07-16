@@ -13,6 +13,9 @@ target_sources(${OUTPUT_NAME}
 	score.c
 	keymap.c
 	menu.c
+	menumain.c
+	menusettings.c
+	menupause.c
 	loading.c
 	dialog.c
 	replay.c
