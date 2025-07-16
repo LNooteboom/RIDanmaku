@@ -188,4 +188,6 @@ void loadingFini(void) {
 	removeDrawUpdate(DRAW_LOADING);
 
 	deleteTexture(loadingTexture[0]);
+	deleteTexture(loadingTexture[1]);
+	deleteTexture(loadingTexture[2]);
 }

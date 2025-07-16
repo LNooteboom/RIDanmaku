@@ -403,6 +403,8 @@ void bulletInit(struct Danmaku *game) {
 	danmaku->bullet.tex = loadTexture("tex/dan/Bullets.png");
 }
 void bulletFini(struct Danmaku *game) {
+	deleteTexture(danmaku->bullet.tex);
+
 	removeUpdate(UPDATE_LATE, bulletUpdate);
 	removeDrawUpdate(DRAW_BULLET_1);
 	removeDrawUpdate(DRAW_BULLET_2);

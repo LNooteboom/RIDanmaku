@@ -214,6 +214,8 @@ void itemInit(struct Danmaku *game) {
 }
 
 void itemFini(struct Danmaku *game) {
+	deleteTexture(game->item.tex);
+
 	removeDrawUpdate(DRAW_ITEM);
 	removeUpdate(UPDATE_NORM, itemUpdate);
 	
