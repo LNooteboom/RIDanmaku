@@ -131,7 +131,7 @@ static void shotMenuChoose(struct MenuController *m) {
 	struct DanmakuStartParams *dsp = &danmaku->startParams;
 	dsp->shotType = m->selected;
 	dsp->lives = 2;
-	//dsp->stage = 2;
+	dsp->stage = 1;
 	dsp->power = 0;
 	dsp->difficulty = D_EXTRA;
 	danmakuSwitch(LOAD_BLACK, NULL);
