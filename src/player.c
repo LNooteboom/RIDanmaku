@@ -7,10 +7,11 @@
 #define DAN_LIFE_PIECES 5
 
 static void addPower(struct DanPlayerController *p, int power) {
-	bool maxPower = p->power == p->maxPower;
-	p->power = min(p->power + power, p->maxPower);
+	struct DanmakuState *s = &danmaku->state;
+	bool maxPower = s->power == p->maxPower;
+	s->power = min(s->power + power, p->maxPower);
 
-	if (!maxPower && p->power % 100 == 0)
+	if (!maxPower && s->power % 100 == 0)
 		danmakuPlaySfx(19);
 }
 
@@ -24,25 +25,25 @@ void danPlayerAddPowerBig(void) {
 }
 
 void danPlayerAddLife(void) {
-	struct DanPlayerController *p = &danmaku->player;
-	if (p->lives < DAN_MAX_LIVES) {
-		p->lives += 1;
-		if (p->lives == DAN_MAX_LIVES) {
-			p->lifePieces = 0;
+	struct DanmakuState *s = &danmaku->state;
+	if (s->lives < DAN_MAX_LIVES) {
+		s->lives += 1;
+		if (s->lives == DAN_MAX_LIVES) {
+			s->lifePieces = 0;
 		}
 		danmakuPlaySfx(20);
 	}
 }
 
 void danPlayerAddLifepiece(void) {
-	struct DanPlayerController *p = &danmaku->player;
-	if (p->lives < DAN_MAX_LIVES) {
-		if (p->lifePieces == DAN_LIFE_PIECES - 1) {
-			p->lives += 1;
-			p->lifePieces = 0;
+	struct DanmakuState *s = &danmaku->state;
+	if (s->lives < DAN_MAX_LIVES) {
+		if (s->lifePieces == DAN_LIFE_PIECES - 1) {
+			s->lives += 1;
+			s->lifePieces = 0;
 			danmakuPlaySfx(20);
 		} else {
-			p->lifePieces += 1;
+			s->lifePieces += 1;
 		}
 	}
 }
@@ -72,18 +73,12 @@ void danPlayerGraze(void) {
 	scoreGraze();
 }
 
-void danPlayerCreate(struct Danmaku *game, struct DanmakuStartParams *dsp) {
+void danPlayerCreate(struct Danmaku *game, struct DanmakuState *state) {
 	struct DanPlayerController *p = &game->player;
 	char nameBuf[32];
-	snprintf(nameBuf, 32, "pl%.02d%c", dsp->player, dsp->shotType + 'a');
+	snprintf(nameBuf, 32, "pl%.02d%c", state->player, state->shotType + 'a');
 	logDebug("Loading player script: %s\n", nameBuf);
 	ichigoAddFile(&p->playerScript, nameBuf);
-
-	p->playerType = dsp->player;
-	p->shotType = dsp->shotType;
-	p->power = dsp->power;
-	p->lives = dsp->lives;
-	p->lifePieces = dsp->lifePieces;
 
 	p->entity = newEntity();
 	struct Transform *tf = newComponent(TRANSFORM, p->entity);
@@ -114,14 +109,14 @@ void danPlayerCreate(struct Danmaku *game, struct DanmakuStartParams *dsp) {
 	p->uiLives = newEntity();
 	drawVmNew(p->uiLives, "uiLives");
 	l = getComponent(DRAW_VM_LOCALS, p->uiLives);
-	l->i[0] = p->lives;
+	l->i[0] = state->lives;
 	l->i[1] = DAN_MAX_LIVES;
-	l->i[2] = p->lifePieces;
+	l->i[2] = state->lifePieces;
 
 	p->uiPower = newEntity();
 	drawVmNew(p->uiPower, "uiPower");
 	l = getComponent(DRAW_VM_LOCALS, p->uiPower);
-	l->i[0] = p->power + p->maxPower * 1000;
+	l->i[0] = state->power + p->maxPower * 1000;
 }
 
 void danPlayerDestroy(struct Danmaku *game) {
@@ -298,16 +293,17 @@ static void updateFocus(struct DanPlayerController *p, struct Transform *tf) {
 
 static void updateUi(struct DanPlayerController *p) {
 	struct IchigoLocals *l = getComponentOpt(DRAW_VM_LOCALS, p->uiLives);
+	struct DanmakuState *s = &danmaku->state;
 	if (l) {
-		if (l->i[0] != p->lives || l->i[2] != p->lifePieces) {
-			l->i[0] = p->lives;
-			l->i[2] = p->lifePieces;
+		if (l->i[0] != s->lives || l->i[2] != s->lifePieces) {
+			l->i[0] = s->lives;
+			l->i[2] = s->lifePieces;
 			drawVmEvent2(p->uiLives, 2);
 		}
 	}
 
 	l = getComponentOpt(DRAW_VM_LOCALS, p->uiPower);
-	int pValue = p->power + p->maxPower * 1000;
+	int pValue = s->power + p->maxPower * 1000;
 	if (l && l->i[0] != pValue) {
 		l->i[0] = pValue;
 		drawVmEvent2(p->uiPower, 2);
@@ -318,6 +314,7 @@ static void danPlayerUpdate(void *arg) {
 	if (!danmaku->active)
 		return;
 	struct DanPlayerController *p = arg;
+	struct DanmakuState *s = &danmaku->state;
 
 	if (p->moveState != p->oldMoveState) {
 		int ev = 0;
@@ -342,8 +339,8 @@ static void danPlayerUpdate(void *arg) {
 	if (p->state == DP_STATE_DEATH_GRACE && p->time >= 8.0f) {
 		p->state = DP_STATE_DEATH;
 		p->time = 0;
-		if (p->lives) {
-			p->lives -= 1;
+		if (s->lives) {
+			s->lives -= 1;
 		} else {
 			menuEndScreen(true, false);
 		}
@@ -376,13 +373,13 @@ static void danPlayerUpdate(void *arg) {
 	if (!game->dialog.active &&
 		(p->state == DP_STATE_NORM || p->state == DP_STATE_DEATH_GRACE) &&
 		keyPressed(K_BOMB) &&
-		p->power >= p->bombPowerCost &&
+		s->power >= p->bombPowerCost &&
 		p->onBomb) {
 
 		p->state = DP_STATE_BOMB;
 		p->time = 0;
 		p->bombHit = false;
-		p->power -= p->bombPowerCost;
+		s->power -= p->bombPowerCost;
 		danmaku->boss.capture = 0;
 		struct IchigoVm *vm = getComponent(ICHIGO_VM, p->entity);
 		p->bombCorout = ichigoVmExec(vm, p->onBomb, "");
@@ -606,7 +603,7 @@ static void ipl_setVarGAME_SPEED(struct IchigoVm *vm, float v) {
 	gameSpeed = v;
 }
 static int ipl_getVarPOWER(struct IchigoVm *vm) {
-	return danmaku->player.power;
+	return danmaku->state.power;
 }
 static float ipl_getVarTARGET_X(struct IchigoVm *vm) {
 	return danmaku->player.targetX;
@@ -631,10 +628,10 @@ static int ipl_getVarDEATH(struct IchigoVm *vm) {
 }
 
 static int ipl_getVarGAUGE(struct IchigoVm *vm) {
-	return danmaku->score.gauge;
+	return danmaku->state.gauge;
 }
 static void ipl_setVarGAUGE(struct IchigoVm *vm, int val) {
-	danmaku->score.gauge = val;
+	danmaku->state.gauge = val;
 }
 
 static int ipl_getVarBOMB(struct IchigoVm *vm) {

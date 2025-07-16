@@ -44,6 +44,9 @@ static void menuChoose(struct MenuController *m) {
 	case MENU_END_RETRY:
 		endMenuChoose(m);
 		break;
+	case MENU_REPLAY_LOAD:
+		replayLoadMenuChoose(m);
+		break;
 	}
 }
 static void menuCancel(struct MenuController *m) {
@@ -69,6 +72,9 @@ static void menuCancel(struct MenuController *m) {
 	case MENU_END_RETRY:
 		m->selected = 4;
 		endMenuChoose(m);
+		break;
+	case MENU_REPLAY_LOAD:
+		replayLoadMenuEnd(m);
 		break;
 	default:
 		break;
@@ -200,8 +206,8 @@ void menuInit(struct Redefined *game) {
 	audioLoadSFX(62, "sfx/ui_cancel.wav");
 	audioLoadSFX(63, "sfx/ui_menu.wav");
 
-	memset(&danmaku->startParams, 0, sizeof(struct DanmakuStartParams));
-	danmaku->startParams.difficulty = D_NORMAL;
+	danmakuResetState();
+	danmaku->state.difficulty = D_NORMAL;
 }
 void menuFini(struct Redefined *game) {
 	(void) game;

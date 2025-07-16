@@ -65,11 +65,11 @@ void dialogStart(const char *fn) {
 
 	char buf[8];
 	if (!drawVmLanguage) {
-		snprintf(buf, 8, "en%.02d", game->danmaku.player.playerType);
+		snprintf(buf, 8, "en%.02d", game->danmaku.state.player);
 	} else if (drawVmLanguage == 1) {
-		snprintf(buf, 8, "jp%.02d", game->danmaku.player.playerType);
+		snprintf(buf, 8, "jp%.02d", game->danmaku.state.player);
 	} else {
-		snprintf(buf, 8, "xx%.02d", game->danmaku.player.playerType);
+		snprintf(buf, 8, "xx%.02d", game->danmaku.state.player);
 	}
 	ichigoAddFile(&dc->iState, buf);
 

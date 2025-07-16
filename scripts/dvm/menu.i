@@ -35,3 +35,28 @@ void scriptsMenuItem(int event) {
 	ascii2(event);
 }
 
+void replayMenuItem(int event) {
+	switch (event) {
+	case EVENT_CREATE:
+		pos(0, 192 + I1 * 16, 0);
+		FLAGS |= FLAG_COLOR_CHILDREN | FLAG_NO_CHILD_EVENT;
+		//colorHex(0xFFFF00);
+		ascii2(event);
+
+		break;
+	case EVENT_DELETE:
+		ascii2(event);
+		childEvent(EVENT_DELETE);
+		break;
+	case EVENT_SELECT:
+		colorHex(0xFFFF00);
+		break;
+	case EVENT_DESELECT:
+		colorHex(0xFFFFFF);
+		break;
+	case EVENT_CHOOSE:
+		ascii2(1);
+		childEvent(1);
+		break;
+	}
+}

@@ -6,16 +6,16 @@
 /* Shot select */
 void shotMenuChoose(struct MenuController *m) {
 	menuDvmEventAll(m, MENU_EVENT_DELETE, MENU_EVENT_DELETE);
-	struct DanmakuStartParams *dsp = &danmaku->startParams;
-	dsp->shotType = m->selected;
-	dsp->lives = 2;
-	dsp->stage = 1;
-	dsp->power = 0;
-	dsp->difficulty = D_EXTRA;
+	struct DanmakuState *state = &danmaku->state;
+	state->shotType = m->selected;
+	state->lives = 2;
+	state->stage = 1;
+	state->power = 0;
+	state->difficulty = D_EXTRA;
 	danmakuSwitch(LOAD_BLACK, NULL);
 }
 void shotMenuStart(struct MenuController *m) {
-	m->selected = danmaku->startParams.shotType;
+	m->selected = danmaku->state.shotType;
 	m->nButtons = 2;
 	m->selectMin = 0;
 	m->selectMax = 1;
@@ -40,13 +40,13 @@ void shotMenuEnd(struct MenuController *m) {
 /* Difficulty select */
 
 void difficultyMenuChoose(struct MenuController *m) {
-	danmaku->startParams.difficulty = m->selected;
+	danmaku->state.difficulty = m->selected;
 	menuDvmEventAll(m, MENU_EVENT_DELETE, MENU_EVENT_DELETE);
 	shotMenuStart(m);
 }
 
 void difficultyMenuStart(struct MenuController *m) {
-	m->selected = danmaku->startParams.difficulty;
+	m->selected = danmaku->state.difficulty;
 	m->nButtons = 4;
 	m->selectMin = 0;
 	m->selectMax = 3;
@@ -169,12 +169,12 @@ void scriptsMenuKey(struct MenuController *m, int match) {
 	case 2: /* choose */
 	{
 		struct ScriptMenuFile *f = vecAt(&m->scriptFiles, m->selected);
-		struct DanmakuStartParams *dsp = &danmaku->startParams;
-		memset(dsp, 0, sizeof(*dsp));
-		dsp->lives = 2;
-		dsp->power = 200;
-		dsp->difficulty = D_NORMAL;
-		dsp->shotType = 1;
+		danmakuResetState();
+		struct DanmakuState *state = &danmaku->state;
+		state->lives = 2;
+		state->power = 200;
+		state->difficulty = D_NORMAL;
+		state->shotType = 1;
 		danmakuSwitch(LOAD_BLACK, f->name);
 		scriptsMenuEnd(m);
 	}
@@ -210,6 +210,9 @@ void mainMenuChoose(struct MenuController *m) {
 		//scriptsMenuStart(m);
 		difficultyMenuStart(m);
 		break;
+	case 4: /* Replay load */
+		replayLoadMenuStart(m);
+		break;
 	case 7: /* Settings */
 		settingsMenuStart(m);
 		break;
@@ -232,6 +235,9 @@ void mainMenuStartNoBg(struct MenuController *m) {
 		drawVmNew(m->buttons[i], mainMenuButtons[i]);
 	}
 	drawVmEvent(getComponent(DRAW_VM, m->buttons[0]), MENU_EVENT_SELECT);
+
+	danmakuResetState();
+	replayClearRecording();
 }
 
 void mainMenuStart(struct MenuController *m) {

@@ -13,14 +13,11 @@
 
 struct ScoreController {
 	uint64_t hiscore;
-	uint64_t score;
 	uint64_t displayScore;
 	uint64_t displayScoreInc;
 	uint32_t pointItems;
 	uint32_t graze;
 
-	uint32_t gauge;
-	uint32_t piv;
 	uint32_t pivMax;
 
 	entity_t uiGauge;

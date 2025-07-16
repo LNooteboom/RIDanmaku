@@ -28,6 +28,7 @@ set(ICH_DST_DIR "${CMAKE_BINARY_DIR}/dat")
 set(ICH_SRCS
     "dan/danmaku.i"
     "dan/st01.i"
+    "dan/st02.i"
 
     "danbg/bg.i"
     "danbg/st02.i"

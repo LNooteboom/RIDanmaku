@@ -5,34 +5,37 @@
 
 void scoreStart(void) {
 	struct ScoreController *s = &danmaku->score;
-	s->gauge = 0;
+	struct DanmakuState *state = &danmaku->state;
 	s->pointItems = 0;
-	s->score = 0;
 	s->displayScore = 0;
 	s->displayScoreInc = 0;
 	s->graze = 0;
 	s->hiscore = scoreGetLeaderBoard()[0].score;
-	//s->piv = 10000;
 
-	switch (danmaku->difficulty) {
+	switch (danmaku->state.difficulty) {
 	case D_EASY:
-		s->piv    = 25000;
+		if (!state->piv)
+			state->piv = 25000;
 		s->pivMax = 50000;
 		break;
 	case D_NORMAL:
-		s->piv    = 50000;
+		if (!state->piv)
+			state->piv = 50000;
 		s->pivMax = 100000;
 		break;
 	case D_HARD:
-		s->piv    = 100000;
+		if (!state->piv)
+			state->piv = 100000;
 		s->pivMax = 200000;
 		break;
 	case D_LUNATIC:
-		s->piv    = 200000;
+		if (!state->piv)
+			state->piv = 200000;
 		s->pivMax = 400000;
 		break;
 	case D_EXTRA:
-		s->piv    = 200000;
+		if (!state->piv)
+			state->piv = 200000;
 		s->pivMax = 400000;
 		break;
 	}
@@ -49,7 +52,8 @@ void scoreShowEndScreen(void) {
 
 }
 
-static void gaugeAdd(struct ScoreController *s, int amt) {
+static void gaugeAdd(int amt) {
+	struct DanmakuState *s = &danmaku->state;
 	if (s->gauge < GAUGE_MAX) {
 		s->gauge += amt;
 		if (s->gauge >= GAUGE_MAX) {
@@ -61,8 +65,8 @@ static void gaugeAdd(struct ScoreController *s, int amt) {
 void scoreGraze(void) {
 	struct ScoreController *s = &danmaku->score;
 	s->graze += 1;
-	s->piv = fminf(s->pivMax, s->piv + 1);
-	gaugeAdd(s, 1);
+	danmaku->state.piv = fminf(s->pivMax, danmaku->state.piv + 1);
+	gaugeAdd(1);
 }
 
 static void valueText(float x, float y, int value, int color) {
@@ -77,7 +81,7 @@ static void valueText(float x, float y, int value, int color) {
 }
 
 static float scoreGetMult(struct ScoreController *s) {
-	return s->gauge == GAUGE_MAX ? 2.0f : lerp(1.0f, 1.5f, s->gauge / (float)GAUGE_MAX);
+	return danmaku->state.gauge == GAUGE_MAX ? 2.0f : lerp(1.0f, 1.5f, danmaku->state.gauge / (float)GAUGE_MAX);
 }
 void scoreGetItem(struct Item *it, float x, float y) {
 	struct ScoreController *s = &danmaku->score;
@@ -88,7 +92,7 @@ void scoreGetItem(struct Item *it, float x, float y) {
 	case ITEM_POINT:
 	{
 		s->pointItems += 1;
-		float value = s->piv - (s->piv % 10);
+		float value = danmaku->state.piv - (danmaku->state.piv % 10);
 		int color;
 		if (it->state == IS_MAGNET) {
 			color = 0xFFFF00;
@@ -104,29 +108,30 @@ void scoreGetItem(struct Item *it, float x, float y) {
 		break;
 	}
 	case ITEM_STAR:
-		if (s->gauge == GAUGE_MAX) {
+		if (danmaku->state.gauge == GAUGE_MAX) {
 			scoreAdd(50000);
 			valueText(x, y, 50000, 0xFFFF00);
 		} else {
-			gaugeAdd(s, 40);
+			gaugeAdd(40);
 			scoreAdd(10);
 			valueText(x, y, 10, 0xFFFFFF);
 		}
 		break;
 	case ITEM_CANCEL:
-		s->piv += 2;
-		if (s->piv > s->pivMax)
-			s->piv = s->pivMax;
+		danmaku->state.piv += 2;
+		if (danmaku->state.piv > s->pivMax)
+			danmaku->state.piv = s->pivMax;
 		break;
 	}
 }
 
 void scoreAdd(uint32_t score) {
 	struct ScoreController *s = &danmaku->score;
-	s->score += score;
-	if (s->score > s->hiscore)
-		s->hiscore = s->score;
-	uint32_t sa = (s->score - s->displayScore) / 20;
+	struct DanmakuState *state = &danmaku->state;
+	state->score += score;
+	if (state->score > s->hiscore)
+		s->hiscore = state->score;
+	uint32_t sa = (state->score - s->displayScore) / 20;
 	sa -= sa % 10;
 	if (sa < 20)
 		sa = 20;
@@ -136,25 +141,26 @@ void scoreAdd(uint32_t score) {
 
 static void scoreUpdate(void *arg) {
 	struct ScoreController *s = arg;
+	struct DanmakuState *state = &danmaku->state;
 	if (!danmaku->active)
 		return;
 
 	s->displayScore += s->displayScoreInc;
-	if (s->displayScore >= s->score) {
+	if (s->displayScore >= state->score) {
 		s->displayScoreInc = 0;
-		s->displayScore = s->score;
+		s->displayScore = state->score;
 	}
 
 	struct IchigoLocals *l = getComponentOpt(DRAW_VM_LOCALS, s->uiGauge);
 	if (l) {
-		l->f[0] = fminf(s->gauge / (float)GAUGE_MAX, 1);
+		l->f[0] = fminf(state->gauge / (float)GAUGE_MAX, 1);
 	}
 	drawVmEvent2(s->uiGauge, 2);
 
 	l = getComponentOpt(DRAW_VM_LOCALS, s->uiGaugeText);
 	if (l) {
 		float mult = scoreGetMult(s);
-		snprintf(s->gaugeText, 64, "%d x %.2f", s->piv - (s->piv % 10), mult);
+		snprintf(s->gaugeText, 64, "%d x %.2f", state->piv - (state->piv % 10), mult);
 		l->str[0] = s->gaugeText;
 		drawVmEvent2(s->uiGaugeText, 2);
 	}
@@ -162,12 +168,12 @@ static void scoreUpdate(void *arg) {
 
 struct ScoreLeaderBoardEntry *scoreGetLeaderBoard(void) {
 	struct ScoreController *s = &danmaku->score;
-	return &(s->scoreFile->leaderboards[danmaku->difficulty][danmaku->player.playerType][danmaku->player.shotType][0]);
+	return &(s->scoreFile->leaderboards[danmaku->state.difficulty][danmaku->state.player][danmaku->state.shotType][0]);
 }
 
 int scoreGetPlace(struct ScoreLeaderBoardEntry *lb) {
 	for (int i = 0; i < 10; i++) {
-		if (danmaku->score.score >= lb[i].score) {
+		if (danmaku->state.score >= lb[i].score) {
 			return i;
 		}
 	}

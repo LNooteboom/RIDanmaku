@@ -5,17 +5,19 @@
 struct Danmaku *danmaku;
 
 static void i_end(struct IchigoVm *vm) {
-	if (danmaku->stage >= 6 || danmaku->startParams.practice) {
-		menuEndScreen(false, !danmaku->startParams.practice);
-	} else {
-		replayStop();
-
+	bool rpyNext = replayHasNextStage();
+	replayStop();
+	if (danmaku->state.stage >= danmaku->nStages || danmaku->state.practice || !rpyNext) {
 		bossEnd(danmaku);
 		danBgEnd(danmaku);
 		//danPlayerDestroy(d);
 		ichigoClear(&danmaku->danScript);
+		menuEndScreen(false, !danmaku->state.practice);
+	} else {
+		/* Load next stage */
+		danmaku->state.stage += 1;
+		danmakuSwitch(LOAD_BLACK, NULL);
 	}
-	vm->is->curCorout->waitTime = 999999;
 }
 
 static void i_normalizeRot(struct IchigoVm *vm) {
@@ -30,7 +32,7 @@ static void i_normalizeRot(struct IchigoVm *vm) {
 }
 
 static void i_diffI(struct IchigoVm *vm) {
-	switch (danmaku->difficulty) {
+	switch (danmaku->state.difficulty) {
 	case D_EASY:
 		ichigoSetInt(vm, 0, ichigoGetInt(vm, 1));
 		break;
@@ -47,7 +49,7 @@ static void i_diffI(struct IchigoVm *vm) {
 }
 
 static void i_diffF(struct IchigoVm *vm) {
-	switch (danmaku->difficulty) {
+	switch (danmaku->state.difficulty) {
 	case D_EASY:
 		ichigoSetFloat(vm, 0, ichigoGetFloat(vm, 1));
 		break;
@@ -64,7 +66,7 @@ static void i_diffF(struct IchigoVm *vm) {
 }
 static void i_diffWait(struct IchigoVm *vm) {
 	struct IchigoCorout *co = vm->is->curCorout;
-	switch (danmaku->difficulty) {
+	switch (danmaku->state.difficulty) {
 	case D_EASY:
 		co->waitTime += ichigoGetFloat(vm, 0);
 		break;
@@ -135,6 +137,11 @@ static void i_initSfxSet(struct IchigoVm *vm) {
 	danmaku->sfx[slot].panning = ichigoGetInt(vm, 3);
 }
 
+static void i_initStages(struct IchigoVm *vm) {
+	danmaku->nStages = ichigoGetInt(vm, 0);
+	danmaku->nExtraStages = ichigoGetInt(vm, 1);
+}
+
 static void danmakuStart(struct Danmaku *d) {
 	d->active = true;
 
@@ -147,14 +154,17 @@ static void danmakuStart(struct Danmaku *d) {
 	rttX = 32 + 192 - 320;
 	rttY = 240;
 
-	d->continuesUsed = 0;
+	if (d->state.replay) {
+		replayStartPlaying();
+	} else {
+		/* Record a replay */
+		replayStartRecording();
+	}
 
 	menuSetIngame();
 
 	danBgStart(d);
 	itemStart(d);
-
-	d->difficulty = d->startParams.difficulty;
 
 	/* Ui */
 	drawVmAddFile("dan_ui");
@@ -186,11 +196,11 @@ static void danmakuStart(struct Danmaku *d) {
 	d->uiDifficulty = getNewEntity();
 	drawVmNew(d->uiDifficulty, "uiDifficulty");
 	l = getComponent(DRAW_VM_LOCALS, d->uiDifficulty);
-	l->i[0] = d->difficulty;
+	l->i[0] = d->state.difficulty;
 
 	loadModelFile("mesh/distortGrid.mes");
 	drawVmAddFile("dan_eff");
-	danPlayerCreate(d, &d->startParams);
+	danPlayerCreate(d, &d->state);
 
 	/* Start script */
 	ichigoAddFile(&d->danScript, d->script);
@@ -199,15 +209,6 @@ static void danmakuStart(struct Danmaku *d) {
 //#ifndef RELEASE
 	drawVmAddFile("ascii");
 //#endif
-
-	if (d->startParams.replayIdx) {
-		/* Load a replay */
-		replayLoadRecording(d->startParams.replayIdx);
-		replayStartPlaying(d->startParams.stage);
-	} else {
-		/* Record a replay */
-		replayStartRecording(d->stage);
-	}
 }
 
 static void danmakuEnd(struct Danmaku *d) {
@@ -216,8 +217,6 @@ static void danmakuEnd(struct Danmaku *d) {
 	danBgEnd(d);
 	danPlayerDestroy(d);
 	ichigoClear(&d->danScript);
-
-	replayClearRecording();
 
 	scoreSave();
 }
@@ -229,7 +228,7 @@ static void danmakuUpdate(void *arg) {
 
 	/* Update UI */
 	struct IchigoLocals *l = getComponentOpt(DRAW_VM_LOCALS, d->uiHiScore);
-	int hs = d->score.score == d->score.hiscore ? d->score.displayScore : d->score.hiscore;
+	int hs = d->state.score == d->score.hiscore ? d->score.displayScore : d->score.hiscore;
 	if (l && l->i[0] != hs) {
 		l->i[0] = hs;
 		drawVmEvent2(d->uiHiScore, 2);
@@ -293,17 +292,17 @@ static void danmakuEvent(void *arg, struct Event *ev) {
 #ifndef RELEASE
 	if (ev->type == EVENT_KEY && d->active) {
 		bool diffch = false;
-		if (ev->param == SDLK_PAGEUP && ev->param2 && d->difficulty < D_LUNATIC) {
+		if (ev->param == SDLK_PAGEUP && ev->param2 && d->state.difficulty < D_LUNATIC) {
 			diffch = true;
-			d->difficulty += 1;
-		} else if (ev->param == SDLK_PAGEDOWN && ev->param2 && d->difficulty > D_EASY) {
+			d->state.difficulty += 1;
+		} else if (ev->param == SDLK_PAGEDOWN && ev->param2 && d->state.difficulty > D_EASY) {
 			diffch = true;
-			d->difficulty -= 1;
+			d->state.difficulty -= 1;
 		}
 		if (diffch) {
 			struct IchigoLocals *l = getComponentOpt(DRAW_VM_LOCALS, d->uiDifficulty);
 			if (l) {
-				l->i[0] = d->difficulty;
+				l->i[0] = d->state.difficulty;
 			}
 			drawVmEvent2(d->uiDifficulty, 2);
 		}
@@ -313,15 +312,29 @@ static void danmakuEvent(void *arg, struct Event *ev) {
 
 void danmakuSwitch(enum LoadingType lt, const char *script) {
 	struct Danmaku *d = danmaku;
-	struct DanmakuStartParams *dsp = &d->startParams;
+	struct DanmakuState *dsp = &d->state;
 	if (script) {
 		strncpy(d->script, script, 64);
-		d->stage = 7;
+		dsp->stage = d->nStages;
 	} else {
 		snprintf(d->script, 64, "st%.02d", dsp->stage);
-		d->stage = dsp->stage;
 	}
 	swScene(lt, "@danmaku");
+}
+
+void danmakuResetState(void) {
+	struct DanmakuState *s = &danmaku->state;
+	s->stage = 0;
+	s->replay = false;
+	s->spellId = 0;
+	s->practice = false;
+	s->power = 0;
+	s->lives = 2;
+	s->lifePieces = 0;
+	s->continuesUsed = 0;
+	s->score = 0;
+	s->gauge = 0;
+	s->piv = 0;
 }
 
 void danmakuInit(struct Redefined *ri) {
@@ -347,6 +360,7 @@ void danmakuInit(struct Redefined *ri) {
 	// init stuff
 	danmakuSetInstr(180, i_initSfxLoad);
 	danmakuSetInstr(181, i_initSfxSet);
+	danmakuSetInstr(184, i_initStages);
 
 	addUpdate(UPDATE_NORM, danmakuUpdate, d);
 	addInputHandler(EVENT_START_SCENE | EVENT_END_SCENE | EVENT_KEY, danmakuEvent, d);

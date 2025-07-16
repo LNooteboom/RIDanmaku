@@ -36,7 +36,7 @@ static void replayUpdate(struct ReplayController *r) {
 				keyState |= (1 << i);
 		}
 
-		if (keyState != r->keys) {
+		if (keyState != r->keys || !r->time) {
 			pushKeys(r, keyState);
 			r->keys = keyState;
 		}
@@ -73,15 +73,16 @@ void replayFini(struct Danmaku *dan) {
 }
 
 
-void replayStartRecording(int stage) {
+void replayStartRecording(void) {
 	struct ReplayController *r = &danmaku->replay;
 	struct ReplayStage *rs = &r->stages[r->currentStage];
-	rs->stageNr = stage;
 	rs->nEvents = 0;
 	rs->randomSeed = randomGetSeed();
 	r->events[r->currentStage] = NULL;
 	r->time = 0;
 	r->keys = 0;
+	if (!r->currentStage)
+		r->startStage = danmaku->state.stage;
 
 	r->state = REPLAY_RECORD;
 }
@@ -103,7 +104,6 @@ void replayClearRecording(void) {
 		struct ReplayStage *rs = &r->stages[i];
 		rs->nEvents = 0;
 		rs->randomSeed = 0;
-		rs->stageNr = -1;
 	}
 	r->currentStage = 0;
 }
@@ -120,11 +120,12 @@ void replaySaveRecording(int idx, char *name) {
 	struct ReplayHeader hdr;
 	strncpy(hdr.name, name, 20);
 	hdr.signature = REPLAY_SIGNATURE;
-	hdr.nStages = r->currentStage + 1;
-	hdr.playerType = danmaku->player.playerType;
-	hdr.shotType = danmaku->player.shotType;
-	hdr.totalScore = danmaku->score.score;
-	hdr.difficulty = danmaku->difficulty;
+	hdr.nStages = r->currentStage;
+	hdr.playerType = danmaku->state.player;
+	hdr.shotType = danmaku->state.shotType;
+	hdr.totalScore = danmaku->state.score;
+	hdr.difficulty = danmaku->state.difficulty;
+	hdr.startStage = r->startStage;
 
 	struct Asset *a = openRecording(idx, true);
 	assetUserWrite(a, &hdr, sizeof(hdr));
@@ -160,7 +161,13 @@ int replayLoadRecording(int idx) {
 
 	assetClose(a);
 
-	danmaku->difficulty = hdr.difficulty;
+	r->nStages = hdr.nStages;
+	r->currentStage = 0;
+	r->startStage = hdr.startStage;
+	danmaku->state.difficulty = hdr.difficulty;
+	danmaku->state.player = hdr.playerType;
+	danmaku->state.shotType = hdr.shotType;
+	danmaku->state.stage = hdr.startStage;
 
 	return 0;
 
@@ -199,10 +206,10 @@ failed:
 	return -1;
 }
 
-void replayStartPlaying(int stage) {
+void replayStartPlaying(void) {
 	struct ReplayController *r = &danmaku->replay;
 	r->playIdx = 0;
-	r->currentStage = stage;
+	r->time = 0;
 	r->state = REPLAY_PLAY;
 	randomSetSeed(r->stages[r->currentStage].randomSeed);
 	keySetSimulation();
@@ -217,7 +224,13 @@ void replayStop(void) {
 	struct ReplayController *r = &danmaku->replay;
 	if (r->state == REPLAY_RECORD) {
 		replayStopRecording(r);
+		replaySaveRecording(0, "test");
 	} else if (r->state == REPLAY_PLAY) {
 		replayStopPlaying(r);
 	}
+}
+
+bool replayHasNextStage(void) {
+	struct ReplayController *r = &danmaku->replay;
+	return r->state != REPLAY_PLAY || r->currentStage + 1 < r->nStages;
 }

@@ -20,7 +20,7 @@ void Girl00() {
 }
 
 async Girl00_at() {
-	bmSet(0, AIM_AT, B16D, RED, 3, 1, rad(30), 0, 5, 1);
+	bmSet(0, AIM_AT, B16D, BLUE, 3, 1, rad(30), 0, 5, 1);
 	bmCloud(0, CLOUD_MEDIUM);
 	bmOffscreen(0, 90);
 	

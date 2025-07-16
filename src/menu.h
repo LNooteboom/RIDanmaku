@@ -27,6 +27,7 @@ enum MenuState {
 	MENU_STAGE_PRAC,
 	MENU_SPELL_PRAC,
 	MENU_MUSIC_ROOM,
+	MENU_REPLAY_LOAD,
 
 	MENU_SCORE,
 
@@ -35,11 +36,13 @@ enum MenuState {
 	MENU_PAUSE,
 	MENU_PAUSE_RETRY,
 	MENU_PAUSE_QUIT,
+	MENU_PAUSE_REPLAY_SAVE,
 
 	MENU_END,
 	MENU_END_RETRY,
 	MENU_END_QUIT,
 	MENU_END_SCORE,
+	MENU_END_REPLAY_SAVE
 };
 
 struct MenuController {
@@ -66,6 +69,8 @@ struct MenuController {
 	entity_t scoreText[10];
 	char scoreTextContent[10][64];
 	bool allowContinue;
+
+	char *replayText;
 };
 
 void menuSetIngame(void);
@@ -103,5 +108,10 @@ void pauseMenuEnd(struct MenuController *m);
 void endMenuChoose(struct MenuController *m);
 void endMenuEnd(struct MenuController *m);
 void menuEndScoreKey(struct MenuController *m, int key);
+
+/* menureplay.c */
+void replayLoadMenuStart(struct MenuController *m);
+void replayLoadMenuChoose(struct MenuController *m);
+void replayLoadMenuEnd(struct MenuController *m);
 
 #endif

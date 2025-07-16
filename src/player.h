@@ -35,10 +35,6 @@ struct DanPlayerBullet {
 struct DanPlayerController {
 	entity_t entity;
 
-	int playerType, shotType;
-	int lives;
-	int lifePieces;
-	int power;
 	int maxPower;
 	int powerItemValue;
 	float magnetRange, focusMagnetRange;
@@ -84,7 +80,7 @@ void danPlayerGraze(void);
 
 void danPlayerBulletHit(struct DanPlayerBullet *pb);
 
-void danPlayerCreate(struct Danmaku *game, struct DanmakuStartParams *dsp);
+void danPlayerCreate(struct Danmaku *game, struct DanmakuState *state);
 void danPlayerDestroy(struct Danmaku *game);
 
 void danPlayerPos(float *x, float *y);

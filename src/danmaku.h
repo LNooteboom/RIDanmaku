@@ -44,10 +44,10 @@ struct DanmakuSfx {
 	int8_t panning;
 };
 
-struct DanmakuStartParams {
+struct DanmakuState {
 	int stage;
 	int difficulty;
-	int replayIdx;
+	bool replay;
 	int spellId;
 	bool practice;
 
@@ -57,6 +57,7 @@ struct DanmakuStartParams {
 	int power;
 	int lives;
 	int lifePieces;
+	int continuesUsed;
 
 	/* Score */
 	uint64_t score;
@@ -67,20 +68,17 @@ struct DanmakuStartParams {
 struct Danmaku {
 	bool active;
 
-	struct DanmakuStartParams startParams;
+	struct DanmakuState state;
 	char script[64];
 	int scriptArg;
-
-	/* Stats */
-	int stage;
-	enum Difficulty difficulty;
-	int continuesUsed;
 
 	float shakeDuration, shakeTime;
 	float shakeIntensity1, shakeIntensity2;
 
 	struct IchigoState danScript;
 	//struct IchigoState bgScript;
+
+	int nStages, nExtraStages;
 
 	struct DanmakuSfx sfx[128];
 
@@ -129,6 +127,8 @@ static inline void danmakuSetVar(int idx, enum IchigoRegType type, void *get, vo
 }
 
 void danmakuSwitch(enum LoadingType lt, const char *script);
+
+void danmakuResetState(void);
 
 void danmakuPlaySfx(int slot);
 void danmakuStopSfx(int slot);

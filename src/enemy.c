@@ -977,7 +977,7 @@ static float i_getVarPLAYER_Y(struct IchigoVm *vm) {
 }
 static int i_getVarDIFFICULTY(struct IchigoVm *vm) {
 	(void)vm;
-	return danmaku->difficulty;
+	return danmaku->state.difficulty;
 }
 static float i_getVarGAME_SPEED(struct IchigoVm *vm) {
 	(void)vm;

@@ -179,16 +179,16 @@ inline void difficultyMenuItem(int event, string txt, float y) {
 	}
 }
 void difficultyMenuEasy(int event) {
-	difficultyMenuItem(event, "Easy", 128);
+	difficultyMenuItem(event, "Easy", 256);
 }
 void difficultyMenuNormal(int event) {
-	difficultyMenuItem(event, "Normal", 192);
+	difficultyMenuItem(event, "Normal", 288);
 }
 void difficultyMenuHard(int event) {
-	difficultyMenuItem(event, "Hard", 256);
+	difficultyMenuItem(event, "Hard", 320);
 }
 void difficultyMenuLunatic(int event) {
-	difficultyMenuItem(event, "Lunatic", 320);
+	difficultyMenuItem(event, "Lunatic", 352);
 }
 
 void shotMenuPl00a(int event) {

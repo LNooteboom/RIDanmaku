@@ -16,6 +16,7 @@ target_sources(${OUTPUT_NAME}
 	menumain.c
 	menusettings.c
 	menupause.c
+	menureplay.c
 	loading.c
 	dialog.c
 	replay.c

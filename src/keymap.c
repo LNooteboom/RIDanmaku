@@ -41,7 +41,7 @@ static void keymapEvent(void *arg, struct Event *ev) {
 	}
 	bool gamepad = ev->type == EVENT_GAMEPAD_BTN;
 	bool pressed = ev->param2;
-	for (int i = 0; i < K_N; i++) {
+	for (int i = kc->simulate? K_MENU : 0; i < K_N; i++) {
 		struct Keymap *km = &kc->map[i];
 		if ((!gamepad && (ev->param == km->key1 || ev->param == km->key2)) ||
 			(gamepad && ev->param == km->gamepadBtn)) {

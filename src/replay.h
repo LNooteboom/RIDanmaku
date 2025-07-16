@@ -2,6 +2,7 @@
 #define REPLAY_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 struct Danmaku;
 
@@ -15,14 +16,16 @@ struct ReplayHeader {
 	uint32_t signature;
 	char name[20];
 	uint64_t totalScore;
+
 	uint8_t nStages;
+	uint8_t startStage;
 	uint8_t playerType;
 	uint8_t shotType;
+
 	uint8_t difficulty;
 };
 
 struct ReplayStage {
-	int stageNr;
 	uint32_t randomSeed;
 	uint32_t nEvents;
 	uint32_t time;
@@ -39,7 +42,8 @@ struct ReplayController {
 	unsigned int time;
 	unsigned int keys;
 
-	int currentStage;
+	int startStage, currentStage;
+	int nStages;
 	unsigned int playIdx;
 
 	struct ReplayStage stages[8];
@@ -51,12 +55,14 @@ void replayFini(struct Danmaku *dan);
 
 void replayStop(void);
 
-void replayStartRecording(int stage);
+void replayStartRecording(void);
 void replayClearRecording(void);
 void replaySaveRecording(int idx, char *name);
 
 int replayGetInfo(char info[128], int idx);
 int replayLoadRecording(int idx);
-void replayStartPlaying(int stage);
+void replayStartPlaying(void);
+
+bool replayHasNextStage(void);
 
 #endif

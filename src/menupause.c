@@ -111,7 +111,7 @@ void menuEndScreen(bool allowContinue, bool cleared) {
 	game->menu.allowContinue = allowContinue;
 	struct ScoreLeaderBoardEntry *lb = scoreGetLeaderBoard();
 	game->menu.scorePlace = scoreGetPlace(lb);
-	if (!danmaku->startParams.practice && game->danmaku.continuesUsed == 0 && game->menu.scorePlace != -1) {
+	if (!danmaku->state.practice && game->danmaku.state.continuesUsed == 0 && game->menu.scorePlace != -1) {
 		menuEndScore(lb, cleared);
 	} else {
 		game->menu.background[0] = 0;
@@ -125,7 +125,7 @@ static void menuEnd(void) {
 	m->nButtons = 3;
 	m->leftRight = false;
 	m->selectMax = 2;
-	if (m->allowContinue && danmaku->continuesUsed < MAX_CONTINUES) {
+	if (m->allowContinue && danmaku->state.continuesUsed < MAX_CONTINUES) {
 		m->selected = 0;
 		m->selectMin = 0;
 	} else {
@@ -147,7 +147,7 @@ static void menuEnd(void) {
 	d = drawVmNew(m->buttons[0], "endMenuContinue");
 	d->layer = 47;
 	struct IchigoLocals *l = getComponent(DRAW_VM_LOCALS, m->buttons[0]);
-	l->i[0] = MAX_CONTINUES - danmaku->continuesUsed;
+	l->i[0] = MAX_CONTINUES - danmaku->state.continuesUsed;
 
 	m->buttons[1] = newEntity();
 	d = drawVmNew(m->buttons[1], "pauseMenuQuit");
@@ -181,9 +181,9 @@ void endMenuChoose(struct MenuController *m) {
 		menuDvmEventAll(m, MENU_EVENT_CHOOSE, MENU_EVENT_DELETE);
 		endMenuEnd(m);
 
-		danmaku->continuesUsed += 1;
-		danmaku->player.lives = 2;
-		danmaku->player.lifePieces = 0;
+		danmaku->state.continuesUsed += 1;
+		danmaku->state.lives = 2;
+		danmaku->state.lifePieces = 0;
 
 		break;
 	case 1: /* Quit */
@@ -222,7 +222,7 @@ void endMenuChoose(struct MenuController *m) {
 		drawVmDelete(m->background[2]);
 		drawVmDelete(m->buttons[3]);
 		drawVmDelete(m->buttons[4]);
-		m->selectMin = danmaku->continuesUsed < MAX_CONTINUES ? 0 : 1;
+		m->selectMin = danmaku->state.continuesUsed < MAX_CONTINUES ? 0 : 1;
 		m->selectMax = 2;
 		m->nButtons = 3;
 		menuDvmEventAll(m, MENU_EVENT_UNFADE, MENU_EVENT_UNFADE);
@@ -307,11 +307,11 @@ static void menuEndScore(struct ScoreLeaderBoardEntry *lb, bool cleared) {
 	}
 	drawVmEvent2(m->keyboardButtons[m->keyboardX + m->keyboardY * 13], 2);
 
-	int stg = danmaku->stage;
+	int stg = danmaku->state.stage;
 	if (cleared) {
-		stg = danmaku->stage == 7 ? 253 : 254;
+		stg = danmaku->state.stage > danmaku->nStages ? 253 : 254;
 	}
-	struct ScoreLeaderBoardEntry n = { "", danmaku->score.score, 0, 0, 0, stg };
+	struct ScoreLeaderBoardEntry n = { "", danmaku->state.score, 0, 0, 0, stg };
 	memcpy(&n.name, danmaku->score.scoreFile->currentName, SCOREF_NAME_LEN);
 	scoreInsert(lb, m->scorePlace, &n);
 	for (int i = 0; i < 10; i++) {

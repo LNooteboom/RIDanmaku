@@ -23,7 +23,7 @@ void itemNew(float x, float y, enum ItemType type) {
 	tf->x = x;
 	tf->y = y;
 	struct Item *it = newComponent(DAN_ITEM, en);
-	if ((type == ITEM_POWER || type == ITEM_POWER_BIG) && danmaku->player.power == danmaku->player.maxPower) {
+	if ((type == ITEM_POWER || type == ITEM_POWER_BIG) && danmaku->state.power == danmaku->player.maxPower) {
 		it->type = ITEM_CANCEL;
 	} else {
 		it->type = type;
@@ -64,7 +64,7 @@ static void itemUpdate(void *arg) {
 			continue;
 		}
 
-		if ((it->type == ITEM_POWER || it->type == ITEM_POWER_BIG) && danmaku->player.power == danmaku->player.maxPower) {
+		if ((it->type == ITEM_POWER || it->type == ITEM_POWER_BIG) && danmaku->state.power == danmaku->player.maxPower) {
 			it->type = ITEM_CANCEL;
 		}
 
