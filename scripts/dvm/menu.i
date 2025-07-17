@@ -38,7 +38,7 @@ void scriptsMenuItem(int event) {
 void replayMenuItem(int event) {
 	switch (event) {
 	case EVENT_CREATE:
-		pos(0, 192 + I1 * 16, 0);
+		pos(-256, 192 + I1 * 16, 0);
 		FLAGS |= FLAG_COLOR_CHILDREN | FLAG_NO_CHILD_EVENT;
 		//colorHex(0xFFFF00);
 		ascii2(event);

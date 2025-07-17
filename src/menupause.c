@@ -6,8 +6,36 @@
 /*
  Pause Menu
 */
-void pauseMenuChoose(struct MenuController *m) {
+
+#define BTN_YES 4
+#define BTN_NO 5
+
+static void pauseMenuConfirm(struct MenuController *m, enum MenuState newState) {
+	/* Ask for confirm */
+	menuDvmEventAll(m, MENU_EVENT_FADE, MENU_EVENT_FADE);
+	drawVmEvent2(m->background[1], MENU_EVENT_FADE);
+
 	struct DrawVm *d;
+	m->state = newState;
+	m->background[2] = newEntity();
+	d = drawVmNew(m->background[2], m->state == MENU_PAUSE_QUIT ? "pauseMenuQuitConfirm" : "pauseMenuRetryConfirm");
+	d->layer = 47;
+	m->buttons[BTN_YES] = newEntity();
+	d = drawVmNew(m->buttons[BTN_YES], m->state == MENU_PAUSE_QUIT ? "pauseMenuQuitYes" : "pauseMenuRetryYes");
+	d->layer = 47;
+	m->buttons[BTN_NO] = newEntity();
+	d = drawVmNew(m->buttons[BTN_NO], m->state == MENU_PAUSE_QUIT ? "pauseMenuQuitNo" : "pauseMenuRetryNo");
+	d->layer = 47;
+	drawVmEvent(d, MENU_EVENT_SELECT);
+	m->selected = BTN_NO;
+	m->selectMin = BTN_YES;
+	m->selectMax = BTN_NO;
+	m->nButtons = BTN_NO + 1;
+	m->leftRight = true;
+}
+
+void pauseMenuChoose(struct MenuController *m) {
+	
 	enum MenuState state;
 	switch (m->selected) {
 	case 0: /* Continue */
@@ -15,44 +43,36 @@ void pauseMenuChoose(struct MenuController *m) {
 		pauseMenuEnd(m);
 		break;
 	case 1: /* Quit */
-	case 2: /* Retry */
-		/* Ask for confirm */
-		menuDvmEventAll(m, MENU_EVENT_FADE, MENU_EVENT_FADE);
-		drawVmEvent2(m->background[1], MENU_EVENT_FADE);
-
-		m->state = m->selected == 1 ? MENU_PAUSE_QUIT : MENU_PAUSE_RETRY;
-		m->background[2] = newEntity();
-		d = drawVmNew(m->background[2], m->state == MENU_PAUSE_QUIT ? "pauseMenuQuitConfirm" : "pauseMenuRetryConfirm");
-		d->layer = 47;
-		m->buttons[3] = newEntity();
-		d = drawVmNew(m->buttons[3], m->state == MENU_PAUSE_QUIT ? "pauseMenuQuitYes" : "pauseMenuRetryYes");
-		d->layer = 47;
-		m->buttons[4] = newEntity();
-		d = drawVmNew(m->buttons[4], m->state == MENU_PAUSE_QUIT ? "pauseMenuQuitNo" : "pauseMenuRetryNo");
-		d->layer = 47;
-		drawVmEvent(d, MENU_EVENT_SELECT);
-		m->selected = 4;
-		m->selectMin = 3;
-		m->selectMax = 4;
-		m->nButtons = 5;
-		m->leftRight = true;
+		pauseMenuConfirm(m, MENU_PAUSE_QUIT);
 		break;
-	case 3: /* Yes */
+	case 2: /* Retry */
+		pauseMenuConfirm(m, MENU_PAUSE_RETRY);
+		break;
+	case 3: /* Replay */
+		pauseMenuConfirm(m, MENU_PAUSE_REPLAY_SAVE_ASK);
+		break;
+
+	case BTN_YES: /* Yes */
 		state = m->state;
 		pauseMenuEnd(m);
 		if (state == MENU_PAUSE_QUIT) {
 			swScene(LOAD_BLACK, "@menu");
-		} else {
+		} else if (state == MENU_PAUSE_RETRY) {
 			swScene(LOAD_BLACK, sceneName);
+		} else {
+			/* todo */
+			m->state = MENU_PAUSE_REPLAY_SAVE;
+			gamePause();
+			replaySaveMenuStart(m);
 		}
 		break;
-	case 4: /* No */
+	case BTN_NO: /* No */
 		drawVmDelete(m->background[2]);
-		drawVmDelete(m->buttons[3]);
-		drawVmDelete(m->buttons[4]);
+		drawVmDelete(m->buttons[BTN_YES]);
+		drawVmDelete(m->buttons[BTN_NO]);
 		m->selectMin = 0;
-		m->selectMax = 2;
-		m->nButtons = 3;
+		m->selectMax = BTN_YES - 1;
+		m->nButtons = BTN_YES;
 		menuDvmEventAll(m, MENU_EVENT_UNFADE, MENU_EVENT_UNFADE);
 		drawVmEvent2(m->background[1], MENU_EVENT_UNFADE);
 		menuSelect(m, m->state == MENU_PAUSE_QUIT ? 1 : 2);
@@ -67,7 +87,7 @@ void pauseMenuStart(struct MenuController *m) {
 	m->nButtons = 3;
 	m->leftRight = false;
 	m->selectMin = 0;
-	m->selectMax = 2;
+	m->selectMax = 3;
 	struct DrawVm *d, *cont;
 	m->background[0] = newEntity();
 	d = drawVmNew(m->background[0], "pauseMenuBackground");
@@ -84,6 +104,9 @@ void pauseMenuStart(struct MenuController *m) {
 	m->buttons[2] = newEntity();
 	d = drawVmNew(m->buttons[2], "pauseMenuReload");
 	d->layer = 47;
+	m->buttons[3] = newEntity();
+	d = drawVmNew(m->buttons[3], "pauseMenuReplayToTitle");
+	d->layer = 47;
 	drawVmEvent(cont, MENU_EVENT_SELECT);
 
 	gamePause();
@@ -97,6 +120,7 @@ void pauseMenuEnd(struct MenuController *m) {
 	drawVmDelete(m->buttons[2]);
 	drawVmDelete(m->buttons[3]);
 	drawVmDelete(m->buttons[4]);
+	drawVmDelete(m->buttons[5]);
 	m->state = MENU_INGAME;
 	m->leftRight = false;
 	gameUnpause();
@@ -111,7 +135,7 @@ void menuEndScreen(bool allowContinue, bool cleared) {
 	game->menu.allowContinue = allowContinue;
 	struct ScoreLeaderBoardEntry *lb = scoreGetLeaderBoard();
 	game->menu.scorePlace = scoreGetPlace(lb);
-	if (!danmaku->state.practice && game->danmaku.state.continuesUsed == 0 && game->menu.scorePlace != -1) {
+	if (!danmaku->state.practice && game->danmaku.state.continuesUsed == 0 && game->menu.scorePlace != -1 && !replayIsPlaying()) {
 		menuEndScore(lb, cleared);
 	} else {
 		game->menu.background[0] = 0;

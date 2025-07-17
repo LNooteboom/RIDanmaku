@@ -41,22 +41,27 @@ static void replayUpdate(struct ReplayController *r) {
 			r->keys = keyState;
 		}
 		r->time += 1;
-	} else if (r->state == REPLAY_PLAY && r->playIdx < r->stages[r->currentStage].nEvents) {
-		struct ReplayEvent *re = &r->events[r->currentStage][r->playIdx];
-		if (r->time == re->time) {
-			unsigned int changed = r->keys ^ re->keys;
-			for (int i = 0; i < 8; i++) {
-				unsigned int mask = 1 << i;
-				if (changed & mask) {
-					if (re->keys & mask) {
-						keySimulatePress(replayKeys[i]);
-					} else {
-						keySimulateRelease(replayKeys[i]);
+	} else if (r->state == REPLAY_PLAY) {
+		if (r->playIdx < r->stages[r->currentStage].nEvents) {
+			struct ReplayEvent *re = &r->events[r->currentStage][r->playIdx];
+			if (r->time == re->time) {
+				unsigned int changed = r->keys ^ re->keys;
+				for (int i = 0; i < 8; i++) {
+					unsigned int mask = 1 << i;
+					if (changed & mask) {
+						if (re->keys & mask) {
+							keySimulatePress(replayKeys[i]);
+						} else {
+							keySimulateRelease(replayKeys[i]);
+						}
 					}
 				}
+				r->keys = re->keys;
+				r->playIdx += 1;
 			}
-			r->keys = re->keys;
-			r->playIdx += 1;
+		}
+		if (r->time >= r->stages[r->currentStage].time) {
+			menuEndScreen(false, false);
 		}
 		r->time += 1;
 	}
@@ -117,6 +122,10 @@ static struct Asset *openRecording(int idx, bool write) {
 
 void replaySaveRecording(int idx, char *name) {
 	struct ReplayController *r = &danmaku->replay;
+	if (!r->currentStage) {
+		logError("Not saving empty replay\n");
+		return;
+	}
 	struct ReplayHeader hdr;
 	strncpy(hdr.name, name, 20);
 	hdr.signature = REPLAY_SIGNATURE;
@@ -195,6 +204,7 @@ int replayGetInfo(char info[128], int idx) {
 		else
 			info[i] = ' ';
 	}
+	snprintf(info + 10, 100, " Stage %d", hdr.nStages);
 
 	assetClose(a);
 	return 0;
@@ -224,10 +234,13 @@ void replayStop(void) {
 	struct ReplayController *r = &danmaku->replay;
 	if (r->state == REPLAY_RECORD) {
 		replayStopRecording(r);
-		replaySaveRecording(0, "test");
 	} else if (r->state == REPLAY_PLAY) {
 		replayStopPlaying(r);
 	}
+}
+
+bool replayIsPlaying(void) {
+	return danmaku->replay.state == REPLAY_PLAY;
 }
 
 bool replayHasNextStage(void) {

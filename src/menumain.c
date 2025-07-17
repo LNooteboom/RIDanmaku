@@ -11,7 +11,7 @@ void shotMenuChoose(struct MenuController *m) {
 	state->lives = 2;
 	state->stage = 1;
 	state->power = 0;
-	state->difficulty = D_EXTRA;
+	//state->difficulty = D_EXTRA;
 	danmakuSwitch(LOAD_BLACK, NULL);
 }
 void shotMenuStart(struct MenuController *m) {
@@ -46,7 +46,7 @@ void difficultyMenuChoose(struct MenuController *m) {
 }
 
 void difficultyMenuStart(struct MenuController *m) {
-	m->selected = danmaku->state.difficulty;
+	m->selected = danmaku->state.difficulty <= D_LUNATIC? danmaku->state.difficulty : D_NORMAL;
 	m->nButtons = 4;
 	m->selectMin = 0;
 	m->selectMax = 3;
@@ -237,7 +237,6 @@ void mainMenuStartNoBg(struct MenuController *m) {
 	drawVmEvent(getComponent(DRAW_VM, m->buttons[0]), MENU_EVENT_SELECT);
 
 	danmakuResetState();
-	replayClearRecording();
 }
 
 void mainMenuStart(struct MenuController *m) {

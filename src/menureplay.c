@@ -3,7 +3,7 @@
 #include <events.h>
 #include "redefined.h"
 
-#define REPLAY_MAX_IDX 10
+#define REPLAY_MAX_IDX 16
 
 void replayLoadMenuStart(struct MenuController *m) {
 	m->state = MENU_REPLAY_LOAD;
@@ -12,7 +12,8 @@ void replayLoadMenuStart(struct MenuController *m) {
 	m->selectMax = m->nButtons - 1;
 	m->selected = 0;
 
-	m->replayText = globalAlloc(REPLAY_MAX_IDX * 128);
+	if (!m->replayText)
+		m->replayText = globalAlloc(REPLAY_MAX_IDX * 128);
 	for (int i = 0; i < REPLAY_MAX_IDX; i++) {
 		char *txt = &m->replayText[i * 128];
 		replayGetInfo(txt, i);
@@ -40,5 +41,41 @@ void replayLoadMenuChoose(struct MenuController *m) {
 }
 
 void replayLoadMenuEnd(struct MenuController *m) {
+	swScene(LOAD_BLACK, "@menu");
+}
+
+
+void replaySaveMenuStart(struct MenuController *m) {
+	m->nButtons = REPLAY_MAX_IDX;
+	m->selectMin = 0;
+	m->selectMax = m->nButtons - 1;
+	m->selected = 0;
+
+	if (!m->replayText)
+		m->replayText = globalAlloc(REPLAY_MAX_IDX * 128);
+	for (int i = 0; i < REPLAY_MAX_IDX; i++) {
+		char *txt = &m->replayText[i * 128];
+		replayGetInfo(txt, i);
+
+		entity_t en = newEntity();
+		m->buttons[i] = en;
+		struct DrawVm *d = drawVmNew(en, "replayMenuItem");
+		d->flags |= DVM_FLAG_DELETE_ALL;
+		struct IchigoLocals *l = getComponent(DRAW_VM_LOCALS, en);
+		l->str[0] = txt;
+		l->i[0] = m->selected == i;
+		l->i[1] = i;
+	}
+
+	drawVmEvent2(m->buttons[m->selected], MENU_EVENT_SELECT);
+}
+
+void replaySaveMenuChoose(struct MenuController *m) {
+	replayStop();
+	replaySaveRecording(m->selected, "test");
+	swScene(LOAD_BLACK, "@menu");
+}
+
+void replaySaveMenuEnd(struct MenuController *m) {
 	globalDealloc(m->replayText);
 }

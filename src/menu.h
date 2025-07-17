@@ -36,6 +36,7 @@ enum MenuState {
 	MENU_PAUSE,
 	MENU_PAUSE_RETRY,
 	MENU_PAUSE_QUIT,
+	MENU_PAUSE_REPLAY_SAVE_ASK,
 	MENU_PAUSE_REPLAY_SAVE,
 
 	MENU_END,
@@ -113,5 +114,9 @@ void menuEndScoreKey(struct MenuController *m, int key);
 void replayLoadMenuStart(struct MenuController *m);
 void replayLoadMenuChoose(struct MenuController *m);
 void replayLoadMenuEnd(struct MenuController *m);
+
+void replaySaveMenuStart(struct MenuController *m);
+void replaySaveMenuChoose(struct MenuController *m);
+void replaySaveMenuEnd(struct MenuController *m);
 
 #endif

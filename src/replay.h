@@ -63,6 +63,7 @@ int replayGetInfo(char info[128], int idx);
 int replayLoadRecording(int idx);
 void replayStartPlaying(void);
 
+bool replayIsPlaying(void);
 bool replayHasNextStage(void);
 
 #endif

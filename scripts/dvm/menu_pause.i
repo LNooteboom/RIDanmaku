@@ -52,6 +52,10 @@ void pauseMenuQuit(int event) {
 void pauseMenuReload(int event) {
 	pauseMenuBtn(event, 0, 384, 640, 3, 100);
 }
+void pauseMenuReplayToTitle(int event) {
+	pauseMenuBtn(event, 0, 896, 1024, 4, -100);
+}
+
 void pauseMenuTitle(int event) {
 	switch (event) {
 	case EVENT_CREATE:

@@ -37,6 +37,7 @@ static void menuChoose(struct MenuController *m) {
 	case MENU_PAUSE:
 	case MENU_PAUSE_QUIT:
 	case MENU_PAUSE_RETRY:
+	case MENU_PAUSE_REPLAY_SAVE_ASK:
 		pauseMenuChoose(m);
 		break;
 	case MENU_END:
@@ -46,6 +47,9 @@ static void menuChoose(struct MenuController *m) {
 		break;
 	case MENU_REPLAY_LOAD:
 		replayLoadMenuChoose(m);
+		break;
+	case MENU_PAUSE_REPLAY_SAVE:
+		replaySaveMenuChoose(m);
 		break;
 	}
 }
@@ -65,6 +69,7 @@ static void menuCancel(struct MenuController *m) {
 		break;
 	case MENU_PAUSE_QUIT:
 	case MENU_PAUSE_RETRY:
+	case MENU_PAUSE_REPLAY_SAVE_ASK:
 		m->selected = 4;
 		pauseMenuChoose(m);
 		break;
@@ -75,6 +80,9 @@ static void menuCancel(struct MenuController *m) {
 		break;
 	case MENU_REPLAY_LOAD:
 		replayLoadMenuEnd(m);
+		break;
+	case MENU_PAUSE_REPLAY_SAVE:
+		replaySaveMenuEnd(m);
 		break;
 	default:
 		break;

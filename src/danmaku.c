@@ -5,9 +5,8 @@
 struct Danmaku *danmaku;
 
 static void i_end(struct IchigoVm *vm) {
-	bool rpyNext = replayHasNextStage();
-	replayStop();
-	if (danmaku->state.stage >= danmaku->nStages || danmaku->state.practice || !rpyNext) {
+	if (danmaku->state.stage >= danmaku->nStages || danmaku->state.practice || !replayHasNextStage()) {
+		replayStop();
 		bossEnd(danmaku);
 		danBgEnd(danmaku);
 		//danPlayerDestroy(d);
@@ -217,6 +216,13 @@ static void danmakuEnd(struct Danmaku *d) {
 	danBgEnd(d);
 	danPlayerDestroy(d);
 	ichigoClear(&d->danScript);
+
+	replayStop();
+	if (strcmp(sceneName, "@danmaku")) {
+		if (!replayIsPlaying())
+			replaySaveRecording(0, "Last");
+		replayClearRecording();
+	}
 
 	scoreSave();
 }
