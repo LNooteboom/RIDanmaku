@@ -1,53 +1,100 @@
 import "danmaku";
 
-async MainSub00() {
-	I1 = 8;  enmNewA("Girl00", 32, -32, 1200, GIRL_R); wait(10);
-	//I1 = 4;  enmNewA("Girl00", 64, -32, 40, GIRL_B); wait(10);
-	//I1 = 8;  enmNewA("Girl00", 96, -32, 40, GIRL_R); wait(10);
-	//I1 = 12; enmNewA("Girl00", 128, -32, 40, GIRL_B); wait(10);
-}
-
-void Girl00() {
+void Boss() {
 	setSFGirl();
-	moveVel(rad(90), 5);
-	wait(I1);
-	moveVelTime(60, EASEOUT1, rad(180), 0);
+	dvmSet(1, "effHex");
+	setBoss(0, "Test", "");
+	invuln(60);
+	distort(160, 0xFF80FF);
+
+	lifeSet(8600);
+	lifeMarker(0, 1400, 0xFFFFA080);
+	setInterrupt(0, 1400, 25 * 60, "BossCard1");
+	stars(5);
+
+	movePosTime(60, EASEOUT1, 0, 128);
 	wait(60);
 
-	Girl00_at();
+	Boss1();
 
 	loop wait(1000);
 }
 
-async Girl00_at() {
-	bmSet(0, AIM_AT, B16D, RED, 3, 1, rad(30), 0, 5, 1);
-	bmCloud(0, CLOUD_MEDIUM);
-	bmOffscreen(0, 90);
-	
-	loop(4) {
-		float s = 3.0;
-		float acc = 1.0 / 60;
-		float r = rad(120);
-		float r2 = rad(20);
-		loop(3) {
-			bmSpeed(0, s, 1);
-			bmAngle(0, rad(0) - r, r2);
-			bmStepSet(0, 2, TRANS_WAIT, 30, 1, STEP_ANGREL, rad(90), 1.0);
-			bmAccelAngvSet(0, 3, TRANS_WAIT, 60, acc, rad(0.8));
-			bmShoot(0);
+void Boss1() {
+	CAPTURE = 1;
+	moveLimit(0, 128, 256, 64);
 
-			bmAngle(0, rad(0) + r, r2);
-			bmStepSet(0, 2, TRANS_WAIT, 30, 1, STEP_ANGREL, rad(-90), 1.0);
-			bmAccelAngvSet(0, 3, TRANS_WAIT, 60, acc, rad(-0.8));
-			bmShoot(0);
-
-			acc += 0.5 / 60;
-			s += 1.0;
-			wait(3);
-		}
-		//wait(120);
+	loop {
+		Boss1Shoot(1);
+		Boss1ShootB(1);
+		wait(60);
+		Boss1Shoot(-1);
+		Boss1ShootB(-1);
+		wait(60);
+		moveRand(30, EASEOUT1, 5);
+		wait(30);
+		Boss1Shoot2();
 	}
 }
+
+async Boss1Shoot(float dir) {
+	bmSet(0, AIM_ST, B16A, RED, 3, 1, 0, rad(20), 1, 1);
+	bmDist(0, 32);
+	bmCloud(0, CLOUD_MEDIUM);
+	
+	int n = 20;
+	float rd = rad(10) * dir;
+	float r = AIM - rd * ((n - 1) / 2.0);
+	float s = 1;
+	loop (n) {
+		bmAngle(0, r, rad(30) + rad(5) * RF);
+		bmAccelSet(0, 1, TRANS_ASYNC, 40, s / 40, NEGF);
+		bmShoot(0);
+		wait(1);
+
+		r += rd;
+		s += 0.2;
+	}
+}
+async Boss1ShootB(float dir) {
+	bmSet(1, AIM_RAND, B32A, RED32, 1, 2, 0, rad(40), 1, 0);
+	bmDist(1, 32);
+	bmCloud(1, CLOUD_MEDIUM);
+
+	wait(5);
+
+	int n = 19;
+	float rd = rad(10) * dir;
+	float r = AIM - rd * ((n - 1) / 2.0);
+	float s = 0.5;
+	loop(n) {
+		bmAngle(1, r, rad(5));
+		bmAccelSet(1, 1, TRANS_ASYNC, 40, s / 40, NEGF);
+		bmShoot(1);
+		wait(1);
+
+		r += rd;
+		s += 0.2;
+	}
+}
+void Boss1Shoot2() {
+	bmSet(0, AIM_ST, B16D, DARKRED, 1, 1, AIM, rad(20), 2, 1);
+	bmDist(0, 48);
+	bmCloud(0, CLOUD_MEDIUM);
+	bmWait(0, 30);
+	bmAccel(0, TRANS_WAIT, 180, -1.0 / 180, NEGF);
+	int c = 1;
+	loop (10) {
+		bmCount(0, c, 1);
+		loop(3) {
+			bmShoot(0);
+			wait(3);
+		}
+
+		c += 1;
+	}
+}
+
 
 void main() {
 	dvmFile("dan_enemy");
@@ -56,10 +103,10 @@ void main() {
 	bgCall("main");
 	wait(20);
 
-	MainSub00();
+	enmNewA("Boss", -128, -32, 1000, 0);
 
-	wait(300);
-	end();
+	//wait(300);
+	//end();
 
 	loop wait(1000);
 }

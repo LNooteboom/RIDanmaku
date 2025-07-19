@@ -353,7 +353,7 @@ extern(51) void moveEllipseRelTime(float time, int mode, float spd, float rad, f
 extern(52) void moveRand(float time, int mode, float spd);
 extern(53) void moveRandRel(float time, int mode, float spd);
 
-extern(54) void moveLimit(float x1, float x2, float y1, float y2);
+extern(54) void moveLimit(float xmid, float w2, float ymid, float h2);
 extern(55) void moveLimitReset();
 
 // DVM
