@@ -42,7 +42,7 @@ static entity_t createTfAndMgr(struct BulletSpawner *s, float x, float y, float 
 	}
 	return en;
 }
-static void createBullet(struct BulletSpawner *s, float x, float y, float spd, float ang) {
+static entity_t createBullet(struct BulletSpawner *s, float x, float y, float spd, float ang) {
 	entity_t en = createTfAndMgr(s, x, y, spd, ang);
 	if (en) {
 		struct Bullet *b = newComponent(DAN_BULLET, en);
@@ -51,6 +51,7 @@ static void createBullet(struct BulletSpawner *s, float x, float y, float spd, f
 		b->ovColor = 0xFFFFFFFF;
 		b->size = danmaku->bullet.types[s->type].w;
 	}
+	return en;
 }
 static void createLaserSt(struct BulletSpawner *s, float x, float y, float spd, float ang, int flags, float initLen, float maxLen, float range, float width) {
 	x += cosf(ang) * initLen;
@@ -793,6 +794,15 @@ static void i_bmShoot(struct IchigoVm *vm) {
 	struct Transform *tf = getComponent(TRANSFORM, vm->en);
 	bmShoot(tf, s);
 }
+static void i_bmShootSingle(struct IchigoVm *vm) {
+	struct BulletSpawner *s = &((struct BulletSpawnerList *)getComponent(DAN_BULLET_SPAWNER, vm->en))->list[ichigoGetInt(vm, 1)];
+	struct Transform *tf = getComponent(TRANSFORM, vm->en);
+	float x, y;
+	getPos(&x, &y, tf, s);
+	entity_t en = createBullet(s, x, y, s->spd1, s->ang1);
+	ichigoSetEntity(vm, 0, en);
+}
+
 static void i_bmAim(struct IchigoVm *vm) {
 	struct BulletSpawner *s = getSpawner(vm);
 	s->aim = ichigoGetInt(vm, 1);
@@ -1052,6 +1062,12 @@ static void i_bulletGetTime(struct IchigoVm *vm) {
 	ichigoSetFloat(vm, 0, b ? b->time : 0);
 }
 
+static void i_bulletGetPos(struct IchigoVm *vm) {
+	entity_t en = ichigoGetEntity(vm, 0);
+	struct Transform *tf = getComponent(TRANSFORM, en);
+	ichigoSetFloat(vm, 1, tf->x);
+	ichigoSetFloat(vm, 2, tf->y);
+}
 static void i_bulletSetPos(struct IchigoVm *vm) {
 	entity_t en = ichigoGetEntity(vm, 0);
 	struct Transform *tf = getComponent(TRANSFORM, en);
@@ -1171,6 +1187,8 @@ void bulletMgrInit(struct Danmaku *game) {
 	danmakuSetInstr(167, i_bulletSetTrans);
 	danmakuSetInstr(168, i_bulletGetMark);
 	danmakuSetInstr(169, i_bulletSetMark);
+	danmakuSetInstr(170, i_bmShootSingle);
+	danmakuSetInstr(171, i_bulletGetPos);
 
 	danmakuSetVar(35, REG_INT, i_getVarLASER_ID, i_setVarLASER_ID);
 

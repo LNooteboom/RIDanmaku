@@ -353,7 +353,7 @@ extern(51) void moveEllipseRelTime(float time, int mode, float spd, float rad, f
 extern(52) void moveRand(float time, int mode, float spd);
 extern(53) void moveRandRel(float time, int mode, float spd);
 
-extern(54) void moveLimit(float xmid, float w2, float ymid, float h2);
+extern(54) void moveLimit(float xmid, float ymid, float w, float h);
 extern(55) void moveLimitReset();
 
 // DVM
@@ -453,6 +453,8 @@ extern(166) void bulletSetAngSpd(entity en, float rr, float ri, float spd);
 extern(167) void bulletSetTrans(entity en, int transIdx, int clearRunning);
 extern(168) int bulletGetMark(entity en);
 extern(169) void bulletSetMark(entity en, int mrk);
+extern(170) entity bmShootSingle(int bm);
+extern(171) void bulletGetPos(entity en, ref float x, ref float y);
 
 // Init
 extern(180) void initSfxLoad(int channel, string file);
@@ -557,7 +559,6 @@ inline void bmCloud(int slot, int type) {
 }
 inline void bmMark(int slot, int flags, int mrk) { bmTrans(slot, flags, 23, mrk, NEG, NEGF, NEGF); }
 inline void bmMarkSet(int slot, int idx, int flags, int mrk) { bmTransSet(slot, idx, flags, 23, mrk, NEG, NEGF, NEGF); }
-
 
 inline void flagSet(int fl) {
 	FLAGS |= fl;
